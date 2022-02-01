@@ -231,10 +231,7 @@ class Query(QueryInstance):
             try:
                 # Resolve the path
                 for part in self._path:
-                    if isinstance(part, str):
-                        value = value[part]
-                    else:
-                        value = part(value)
+                    value = value[part] if isinstance(part, str) else part(value)
             except (KeyError, TypeError):
                 return False
             else:
@@ -479,11 +476,9 @@ class Query(QueryInstance):
 
     def fragment(self, document: Mapping) -> QueryInstance:
         def test(value):
-            for key in document:
-                if key not in value or value[key] != document[key]:
-                    return False
-
-            return True
+            return not any(
+                key not in value or value[key] != document[key] for key in document
+            )
 
         return self._generate_test(
             lambda value: test(value),
